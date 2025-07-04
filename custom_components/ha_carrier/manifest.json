@@ -9,6 +9,6 @@
   "issue_tracker": "https://github.com/erickkobres/ha_carrier/issues",
   "loggers": ["ha_carrier", "carrier_api"],
   "requirements": ["carrier-api==2.8.12"],
-  "version": "2.10.0-fork.2",
+  "version": "2.10.0-fork.3",
   "fork_of": "dahlb/ha_carrier@2.10.0"
 }
