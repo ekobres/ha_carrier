@@ -44,6 +44,8 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities)
                 IndoorUnitOperationalStatusSensor(updater, carrier_system.profile.serial),
             ]
         )
+        if carrier_system.profile.outdoor_unit_type == "varcaphp":
+            entities.append(HPVarSensor(updater, carrier_system.profile.serial))
         if carrier_system.config.humidifier_enabled:
             entities.append(HumidifierRemainingSensor(updater, carrier_system.profile.serial))
         if carrier_system.config.uv_enabled:
@@ -363,9 +365,12 @@ class OutdoorUnitOperationalStatusSensor(CarrierEntity, SensorEntity):
 
     @property
     def native_value(self) -> Any | None:
-        """Return outdoor unit operational status."""
-        if self.carrier_system.status.outdoor_unit_operational_status is not None:
-            return self.carrier_system.status.outdoor_unit_operational_status
+        """Return outdoor unit operational status. Numbers are mapped to 'On'."""
+        value = self.carrier_system.status.outdoor_unit_operational_status
+        if value is not None:
+            if isinstance(value, (int, float)):
+                return "On"
+            return value
 
     @property
     def available(self) -> bool:
@@ -387,6 +392,30 @@ class IndoorUnitOperationalStatusSensor(CarrierEntity, SensorEntity):
         """Return indoor unit operational status."""
         if self.carrier_system.status.indoor_unit_operational_status is not None:
             return self.carrier_system.status.indoor_unit_operational_status
+
+    @property
+    def available(self) -> bool:
+        """Return true if sensor is ready for display."""
+        return self.native_value is not None
+
+
+class HPVarSensor(CarrierEntity, SensorEntity):
+    """HP Var sensor for variable capacity heat pump percentage."""
+    _attr_icon = "mdi:percent-box"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, updater: CarrierDataUpdateCoordinator, system_serial: str):
+        """Create HP Var sensor."""
+        super().__init__("HP Var", updater, system_serial)
+
+    @property
+    def native_value(self) -> float | None:
+        """Return HP Var percentage, or 0 if not a number."""
+        value = self.carrier_system.status.outdoor_unit_operational_status
+        if isinstance(value, (int, float)):
+            return value
+        return 0
 
     @property
     def available(self) -> bool:

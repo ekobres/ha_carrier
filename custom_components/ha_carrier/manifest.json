@@ -1,13 +1,14 @@
 {
   "domain": "ha_carrier",
-  "name": "Carrier Infinity",
-  "codeowners": ["@dahlb"],
+  "name": "Carrier Infinity (Erick Fork)",
+  "codeowners": ["@dahlb", "@erickkobres"],
   "config_flow": true,
-  "documentation": "https://github.com/dahlb/ha_carrier",
+  "documentation": "https://github.com/erickkobres/ha_carrier",
   "integration_type": "hub",
   "iot_class": "cloud_push",
-  "issue_tracker": "https://github.com/dahlb/ha_carrier/issues",
+  "issue_tracker": "https://github.com/erickkobres/ha_carrier/issues",
   "loggers": ["ha_carrier", "carrier_api"],
   "requirements": ["carrier-api==2.8.12"],
-  "version": "2.10.0"
+  "version": "2.10.0-fork.1",
+  "fork_of": "dahlb/ha_carrier@2.10.0"
 }
