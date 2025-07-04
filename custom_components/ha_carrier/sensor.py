@@ -365,18 +365,13 @@ class OutdoorUnitOperationalStatusSensor(CarrierEntity, SensorEntity):
 
     @property
     def native_value(self) -> Any | None:
-        """Return outdoor unit operational status. Numbers as strings are mapped to 'On'."""
+        """Return outdoor unit operational status. Numbers as strings are mapped to 'on'."""
         value = self.carrier_system.status.outdoor_unit_operational_status
         _LOGGER.warning("ODU Status raw value: %r (type: %s)", value, type(value))
         if value is not None:
-            try:
-                # Accept numbers as int, float, or numeric strings
-                if isinstance(value, (int, float)):
-                    return "On"
-                if isinstance(value, str) and value.replace('.', '', 1).isdigit():
-                    return "On"
-            except Exception as e:
-                _LOGGER.error("Error checking ODU Status value: %r", e)
+            # Accept only numeric strings (we know only integer values as strings are used)
+            if isinstance(value, str) and value.isdigit():
+                return "on"
             return value
 
     @property
@@ -418,16 +413,20 @@ class HPVarSensor(CarrierEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Return HP Var percentage, or 0 if not a number (accepts numeric strings)."""
+        """
+        Return HP Var percentage as a float if the value is a numeric string (including decimals).
+        Returns 0 for any non-numeric value. This sensor is only registered for systems
+        with outdoor_unit_type == 'varcaphp'.
+        """
         value = self.carrier_system.status.outdoor_unit_operational_status
         _LOGGER.warning("HP Var raw value: %r (type: %s)", value, type(value))
-        try:
-            if isinstance(value, (int, float)):
-                return value
-            if isinstance(value, str) and value.replace('.', '', 1).isdigit():
+        if isinstance(value, str):
+            # Accept numeric strings, including decimals (e.g., '45', '37.5')
+            try:
                 return float(value)
-        except Exception as e:
-            _LOGGER.error("Error checking HP Var value: %r", e)
+            except ValueError:
+                pass
+        # Return 0 for any non-numeric or missing value
         return 0
 
     @property
