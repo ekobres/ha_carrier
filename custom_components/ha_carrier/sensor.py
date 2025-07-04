@@ -365,11 +365,18 @@ class OutdoorUnitOperationalStatusSensor(CarrierEntity, SensorEntity):
 
     @property
     def native_value(self) -> Any | None:
-        """Return outdoor unit operational status. Numbers are mapped to 'On'."""
+        """Return outdoor unit operational status. Numbers as strings are mapped to 'On'."""
         value = self.carrier_system.status.outdoor_unit_operational_status
+        _LOGGER.warning("ODU Status raw value: %r (type: %s)", value, type(value))
         if value is not None:
-            if isinstance(value, (int, float)):
-                return "On"
+            try:
+                # Accept numbers as int, float, or numeric strings
+                if isinstance(value, (int, float)):
+                    return "On"
+                if isinstance(value, str) and value.replace('.', '', 1).isdigit():
+                    return "On"
+            except Exception as e:
+                _LOGGER.error("Error checking ODU Status value: %r", e)
             return value
 
     @property
@@ -411,10 +418,16 @@ class HPVarSensor(CarrierEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Return HP Var percentage, or 0 if not a number."""
+        """Return HP Var percentage, or 0 if not a number (accepts numeric strings)."""
         value = self.carrier_system.status.outdoor_unit_operational_status
-        if isinstance(value, (int, float)):
-            return value
+        _LOGGER.warning("HP Var raw value: %r (type: %s)", value, type(value))
+        try:
+            if isinstance(value, (int, float)):
+                return value
+            if isinstance(value, str) and value.replace('.', '', 1).isdigit():
+                return float(value)
+        except Exception as e:
+            _LOGGER.error("Error checking HP Var value: %r", e)
         return 0
 
     @property
