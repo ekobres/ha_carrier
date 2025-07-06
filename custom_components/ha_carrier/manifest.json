@@ -1,13 +1,14 @@
 {
   "domain": "ha_carrier",
   "name": "Carrier Infinity (airflow-mou-config)",
-  "version": "2.10.0-airflow-mou-config.5",
-  "documentation": "https://github.com/neggert/ha_carrier",
-  "issue_tracker": "https://github.com/neggert/ha_carrier/issues",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": ["@neggert"],
+  "codeowners": ["@ekobres"],
   "config_flow": true,
+  "documentation": "https://github.com/ekobres/ha_carrier",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/ekobres/ha_carrier/issues",
+  "loggers": ["ha_carrier", "carrier_api"],
+  "requirements": ["carrier-api==2.8.12"],
   "description": "Carrier Infinity integration with airflow measurement unit configuration (psi/inH2O) for static pressure sensor. Branch for airflow-mou-config HACS testing.",
-  "iot_class": "cloud_polling"
+  "version": "2.10.0-airflow-mou-config"
 }
