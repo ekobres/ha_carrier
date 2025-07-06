@@ -19,7 +19,8 @@
       "init": {
         "title": "Carrier Infinity: Configuration",
         "data": {
-          "infinite_holds": "Holds are infinite, when off holds are until next scheduled activity"
+          "infinite_holds": "Holds are infinite, when off holds are until next scheduled activity",
+          "static_pressure_unit": "Static pressure unit (psi or inH2O)"
         }
       }
     }

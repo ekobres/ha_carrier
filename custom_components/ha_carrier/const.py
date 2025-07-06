@@ -44,3 +44,7 @@ TO_REDACT_ENTITIES = {}
 HEAT_SOURCE_IDU_ONLY_LABEL = "gas heat only"
 HEAT_SOURCE_ODU_ONLY_LABEL = "heat pump only"
 HEAT_SOURCE_SYSTEM_LABEL = "system in control"
+
+CONF_STATIC_PRESSURE_UNIT: str = "static_pressure_unit"
+DEFAULT_STATIC_PRESSURE_UNIT: str = "psi"
+STATIC_PRESSURE_UNITS = ["psi", "inH2O"]

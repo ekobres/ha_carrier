@@ -29,6 +29,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities)
     updater: CarrierDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ][DATA_UPDATE_COORDINATOR]
+    static_pressure_unit = config_entry.options.get("static_pressure_unit", "psi")
     entities = []
     for carrier_system in updater.systems:
         entities.extend(
@@ -39,7 +40,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities)
                 TimestampSensor(updater, carrier_system.profile.serial, "websocket"),
                 TimestampSensor(updater, carrier_system.profile.serial, "energy"),
                 AirflowSensor(updater, carrier_system.profile.serial),
-                StaticPressureSensor(updater, carrier_system.profile.serial),
+                StaticPressureSensor(updater, carrier_system.profile.serial, static_pressure_unit),
                 OutdoorUnitOperationalStatusSensor(updater, carrier_system.profile.serial),
                 IndoorUnitOperationalStatusSensor(updater, carrier_system.profile.serial),
             ]
@@ -333,20 +334,32 @@ class AirflowSensor(CarrierEntity, SensorEntity):
 
 class StaticPressureSensor(CarrierEntity, SensorEntity):
     """Static Pressure sensor."""
-    _attr_device_class = SensorDeviceClass.PRESSURE
-    _attr_native_unit_of_measurement = "psi"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:air-filter"
 
-    def __init__(self, updater: CarrierDataUpdateCoordinator, system_serial: str):
+    def __init__(self, updater: CarrierDataUpdateCoordinator, system_serial: str, static_pressure_unit: str = "psi"):
         """Static Pressure sensor."""
+        self.static_pressure_unit = static_pressure_unit
+        # Set device class only for psi, not for inH2O
+        if static_pressure_unit == "psi":
+            self._attr_device_class = SensorDeviceClass.PRESSURE
+        elif hasattr(self, '_attr_device_class'):
+            del self._attr_device_class
         super().__init__("Static Pressure", updater, system_serial)
 
     @property
+    def native_unit_of_measurement(self) -> str:
+        """Return the configured unit of measurement ('psi' or 'inH2O')."""
+        return self.static_pressure_unit
+
+    @property
     def native_value(self) -> float:
-        """Return Static Pressure in psi."""
-        if self.carrier_system.status.static_pressure is not None:
-           return self.carrier_system.status.static_pressure * 0.03613 # convert from inwc to psi
+        """Return Static Pressure in the configured unit."""
+        value = self.carrier_system.status.static_pressure
+        if value is not None:
+            if self.static_pressure_unit == "psi":
+                return value * 0.03613  # convert from inH2O to psi
+            return value  # inH2O, unconverted
 
     @property
     def available(self) -> bool:
@@ -355,21 +368,24 @@ class StaticPressureSensor(CarrierEntity, SensorEntity):
 
 
 class OutdoorUnitOperationalStatusSensor(CarrierEntity, SensorEntity):
-    """Outdoor unit operational status sensor."""
+    """Outdoor unit operational status sensor.
+    Maps numeric string values to 'on' for improved logbook phrasing in Home Assistant.
+    """
     _attr_icon = "mdi:hvac"
 
     def __init__(self, updater: CarrierDataUpdateCoordinator, system_serial: str):
-        """Creates outdoor unit operational status sensor."""
+        """Create outdoor unit operational status sensor."""
         super().__init__("ODU Status", updater, system_serial)
         self.entity_description = SensorEntityDescription(key="ODU Status", device_class=SensorDeviceClass.ENUM)
 
     @property
     def native_value(self) -> Any | None:
-        """Return outdoor unit operational status. Numbers as strings are mapped to 'on'."""
+        """
+        Return outdoor unit operational status. Numeric strings (e.g., '1') are mapped to 'on'.
+        This improves logbook phrasing in Home Assistant.
+        """
         value = self.carrier_system.status.outdoor_unit_operational_status
-        _LOGGER.warning("ODU Status raw value: %r (type: %s)", value, type(value))
         if value is not None:
-            # Accept only numeric strings (we know only integer values as strings are used)
             if isinstance(value, str) and value.isdigit():
                 return "on"
             return value
@@ -402,7 +418,11 @@ class IndoorUnitOperationalStatusSensor(CarrierEntity, SensorEntity):
 
 
 class HPVarSensor(CarrierEntity, SensorEntity):
-    """HP Var sensor for variable capacity heat pump percentage."""
+    """HP Var sensor for variable capacity heat pump percentage.
+    Only registered for systems with outdoor_unit_type == 'varcaphp'.
+    Returns the percentage as a float if the value is a numeric string (including decimals),
+    or 0 for any non-numeric value.
+    """
     _attr_icon = "mdi:percent-box"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -415,18 +435,14 @@ class HPVarSensor(CarrierEntity, SensorEntity):
     def native_value(self) -> float | None:
         """
         Return HP Var percentage as a float if the value is a numeric string (including decimals).
-        Returns 0 for any non-numeric value. This sensor is only registered for systems
-        with outdoor_unit_type == 'varcaphp'.
+        Returns 0 for any non-numeric value.
         """
         value = self.carrier_system.status.outdoor_unit_operational_status
-        _LOGGER.warning("HP Var raw value: %r (type: %s)", value, type(value))
         if isinstance(value, str):
-            # Accept numeric strings, including decimals (e.g., '45', '37.5')
             try:
                 return float(value)
             except ValueError:
                 pass
-        # Return 0 for any non-numeric or missing value
         return 0
 
     @property
