@@ -1,6 +1,6 @@
 {
   "domain": "ha_carrier",
-  "name": "Carrier Infinity (airflow-mou-config)",
+  "name": "Carrier Infinity (static-pressure-mou-config)",
   "codeowners": [
     "@ekobres"
   ],
