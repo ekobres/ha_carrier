@@ -11,7 +11,6 @@ __pycache__
 .vscode
 .idea
 coverage.xml
-.DS_Store
 
 
 # Home Assistant configuration
