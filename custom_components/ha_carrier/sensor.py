@@ -355,21 +355,24 @@ class StaticPressureSensor(CarrierEntity, SensorEntity):
 
 
 class OutdoorUnitOperationalStatusSensor(CarrierEntity, SensorEntity):
-    """Outdoor unit operational status sensor."""
+    """Outdoor unit operational status sensor.
+    Maps numeric string values to 'on' for improved logbook phrasing in Home Assistant.
+    """
     _attr_icon = "mdi:hvac"
 
     def __init__(self, updater: CarrierDataUpdateCoordinator, system_serial: str):
-        """Creates outdoor unit operational status sensor."""
+        """Create outdoor unit operational status sensor."""
         super().__init__("ODU Status", updater, system_serial)
         self.entity_description = SensorEntityDescription(key="ODU Status", device_class=SensorDeviceClass.ENUM)
 
     @property
     def native_value(self) -> Any | None:
-        """Return outdoor unit operational status. Numbers as strings are mapped to 'on'."""
+        """
+        Return outdoor unit operational status. Numeric strings (e.g., '1') are mapped to 'on'.
+        This improves logbook phrasing in Home Assistant.
+        """
         value = self.carrier_system.status.outdoor_unit_operational_status
-        _LOGGER.warning("ODU Status raw value: %r (type: %s)", value, type(value))
         if value is not None:
-            # Accept only numeric strings (we know only integer values as strings are used)
             if isinstance(value, str) and value.isdigit():
                 return "on"
             return value
@@ -402,7 +405,11 @@ class IndoorUnitOperationalStatusSensor(CarrierEntity, SensorEntity):
 
 
 class HPVarSensor(CarrierEntity, SensorEntity):
-    """HP Var sensor for variable capacity heat pump percentage."""
+    """HP Var sensor for variable capacity heat pump percentage.
+    Only registered for systems with outdoor_unit_type == 'varcaphp'.
+    Returns the percentage as a float if the value is a numeric string (including decimals),
+    or 0 for any non-numeric value.
+    """
     _attr_icon = "mdi:percent-box"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -415,18 +422,14 @@ class HPVarSensor(CarrierEntity, SensorEntity):
     def native_value(self) -> float | None:
         """
         Return HP Var percentage as a float if the value is a numeric string (including decimals).
-        Returns 0 for any non-numeric value. This sensor is only registered for systems
-        with outdoor_unit_type == 'varcaphp'.
+        Returns 0 for any non-numeric value.
         """
         value = self.carrier_system.status.outdoor_unit_operational_status
-        _LOGGER.warning("HP Var raw value: %r (type: %s)", value, type(value))
         if isinstance(value, str):
-            # Accept numeric strings, including decimals (e.g., '45', '37.5')
             try:
                 return float(value)
             except ValueError:
                 pass
-        # Return 0 for any non-numeric or missing value
         return 0
 
     @property
