@@ -17,6 +17,5 @@
     "carrier-api==2.8.13"
   ],
   "description": "Carrier Infinity integration with airflow measurement unit configuration (psi/inH2O) for static pressure sensor. Branch for airflow-mou-config HACS testing.",
-  "version": "2.11.0-static-pressure-mou-config",
-  "fork_of": "dahlb/ha_carrier@2.11.1"
+  "version": "2.11.0-static-pressure-mou-config"
 }
