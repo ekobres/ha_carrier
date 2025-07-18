@@ -1,13 +1,21 @@
 {
   "domain": "ha_carrier",
-  "name": "Carrier Infinity (Erick Fork)",
-  "codeowners": ["@dahlb", "@erickkobres"],
+  "name": "Carrier Infinity (static-pressure-mou-config)",
+  "codeowners": [
+    "@ekobres"
+  ],
   "config_flow": true,
-  "documentation": "https://github.com/erickkobres/ha_carrier",
+  "documentation": "https://github.com/ekobres/ha_carrier",
   "integration_type": "hub",
   "iot_class": "cloud_push",
-  "issue_tracker": "https://github.com/erickkobres/ha_carrier/issues",
-  "loggers": ["ha_carrier", "carrier_api"],
-  "requirements": ["carrier-api==2.8.13"],
-  "version": "2.11.1-ekobres"
+  "issue_tracker": "https://github.com/ekobres/ha_carrier/issues",
+  "loggers": [
+    "ha_carrier",
+    "carrier_api"
+  ],
+  "requirements": [
+    "carrier-api==2.8.13"
+  ],
+  "description": "Carrier Infinity integration fork with experimental features: Static Pressure MOU configuration.",
+  "version": "2.11.1-main-ekobres"
 }

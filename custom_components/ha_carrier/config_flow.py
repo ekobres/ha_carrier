@@ -18,6 +18,9 @@ from .const import (
     CONFIG_FLOW_VERSION,
     CONF_INFINITE_HOLDS,
     DEFAULT_INFINITE_HOLDS,
+    CONF_STATIC_PRESSURE_UNIT,
+    DEFAULT_STATIC_PRESSURE_UNIT,
+    STATIC_PRESSURE_UNITS,
 )
 
 from carrier_api import ApiConnectionGraphql
@@ -38,6 +41,12 @@ class OptionFlowHandler(config_entries.OptionsFlow):
                         CONF_INFINITE_HOLDS, DEFAULT_INFINITE_HOLDS
                     ),
                 ): cv.boolean,
+                vol.Required(
+                    CONF_STATIC_PRESSURE_UNIT,
+                    default=config_entry.options.get(
+                        CONF_STATIC_PRESSURE_UNIT, DEFAULT_STATIC_PRESSURE_UNIT
+                    ),
+                ): vol.In(STATIC_PRESSURE_UNITS),
             }
         )
 

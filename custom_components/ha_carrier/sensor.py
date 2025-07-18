@@ -29,6 +29,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities)
     updater: CarrierDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ][DATA_UPDATE_COORDINATOR]
+    static_pressure_unit = config_entry.options.get("static_pressure_unit", "psi")
     entities = []
     for carrier_system in updater.systems:
         entities.extend(
@@ -39,7 +40,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities)
                 TimestampSensor(updater, carrier_system.profile.serial, "websocket"),
                 TimestampSensor(updater, carrier_system.profile.serial, "energy"),
                 AirflowSensor(updater, carrier_system.profile.serial),
-                StaticPressureSensor(updater, carrier_system.profile.serial),
+                StaticPressureSensor(updater, carrier_system.profile.serial, static_pressure_unit),
                 OutdoorUnitOperationalStatusSensor(updater, carrier_system.profile.serial),
                 IndoorUnitOperationalStatusSensor(updater, carrier_system.profile.serial),
             ]
@@ -333,20 +334,32 @@ class AirflowSensor(CarrierEntity, SensorEntity):
 
 class StaticPressureSensor(CarrierEntity, SensorEntity):
     """Static Pressure sensor."""
-    _attr_device_class = SensorDeviceClass.PRESSURE
-    _attr_native_unit_of_measurement = "psi"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:air-filter"
 
-    def __init__(self, updater: CarrierDataUpdateCoordinator, system_serial: str):
+    def __init__(self, updater: CarrierDataUpdateCoordinator, system_serial: str, static_pressure_unit: str = "psi"):
         """Static Pressure sensor."""
+        self.static_pressure_unit = static_pressure_unit
+        # Set device class only for psi, not for inH2O
+        if static_pressure_unit == "psi":
+            self._attr_device_class = SensorDeviceClass.PRESSURE
+        elif hasattr(self, '_attr_device_class'):
+            del self._attr_device_class
         super().__init__("Static Pressure", updater, system_serial)
 
     @property
+    def native_unit_of_measurement(self) -> str:
+        """Return the configured unit of measurement ('psi' or 'inH2O')."""
+        return self.static_pressure_unit
+
+    @property
     def native_value(self) -> float:
-        """Return Static Pressure in psi."""
-        if self.carrier_system.status.static_pressure is not None:
-           return self.carrier_system.status.static_pressure * 0.03613 # convert from inwc to psi
+        """Return Static Pressure in the configured unit."""
+        value = self.carrier_system.status.static_pressure
+        if value is not None:
+            if self.static_pressure_unit == "psi":
+                return value * 0.03613  # convert from inH2O to psi
+            return value  # inH2O, unconverted
 
     @property
     def available(self) -> bool:
