@@ -17,5 +17,5 @@
     "carrier-api==2.8.13"
   ],
   "description": "Carrier Infinity integration fork with experimental features: Static Pressure MOU configuration.",
-  "version": "2.11.1-main-ekobres"
+  "version": "2.12.0-main-ekobres"
 }
